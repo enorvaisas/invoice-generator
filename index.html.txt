@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Invoice Generator</title>
+    
+    <style>
+        /* Global Reset and Typography */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .invoice-container {
+            width: 800px;
+            background-color: white;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Input Styling - General */
+        input[type="text"],
+        input[type="number"],
+        input[type="date"] {
+            border: none;
+            border-bottom: 1px solid #ccc;
+            padding: 4px 0;
+            margin-bottom: 5px;
+            width: 100%;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            outline: none;
+            border-bottom-color: #333;
+        }
+
+        /* Header Styling */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+        }
+
+        .header-left input {
+            width: 150px;
+            display: inline-block;
+            font-size: 24px;
+            font-weight: bold;
+            border-bottom: 2px solid #333;
+        }
+
+        .header-right {
+            text-align: right;
+        }
+
+        .header-right .date-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+
+        .header-right .date-input {
+            width: 150px;
+            text-align: right;
+        }
+
+        /* Address Section */
+        .address-section {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .address-block {
+            width: 48%;
+            padding: 10px;
+        }
+
+        .block-title {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .from-block input {
+            font-size: 12px;
+        }
+
+        /* Items Table Styling */
+        .items-section {
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1.5fr 1.5fr 0.2fr;
+            background-color: #333;
+            color: white;
+            font-weight: bold;
+            padding: 8px 10px;
+            margin-bottom: 5px;
+        }
+
+        .item-row {
+            display: grid;
+            grid-template-columns: 3fr 1fr 1.5fr 1.5fr 0.2fr;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .item-row input {
+            border: none;
+            padding: 5px;
+            margin: 0;
+            border-bottom: none;
+            text-align: left;
+        }
+
+        .item-row .item-quantity,
+        .item-row .item-unit-price {
+            text-align: right;
+        }
+
+        .item-row .item-amount {
+            text-align: right;
+            padding-right: 10px;
+            font-weight: bold;
+        }
+
+        .add-item-btn {
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 8px 15px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-item-btn:hover {
+            background-color: #e0e0e0;
+        }
+
+        .remove-item-btn {
+            background: none;
+            border: none;
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .remove-item-btn:hover {
+            opacity: 1;
+        }
+
+        /* Footer Section */
+        .footer-section {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .payment-details {
+            width: 48%;
+        }
+
+        .payment-details input {
+            font-size: 12px;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .payment-note {
+            margin-top: 20px;
+            background-color: #333;
+            color: white;
+            padding: 8px 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .totals-summary {
+            width: 40%;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .summary-row .label {
+            font-weight: normal;
+        }
+
+        .summary-row .value {
+            font-weight: bold;
+        }
+
+        .total-row {
+            border-top: 2px solid #333;
+            background-color: #f0f0f0;
+            padding: 10px 0;
+            margin-top: 10px;
+        }
+
+        .total-row .label, .total-row .value {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        /* VAT and Discount Inputs */
+        .vat-row input#vatRate {
+            width: 40px;
+            text-align: right;
+            display: inline-block;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .discount-row input#discountValue {
+            width: 80px;
+            text-align: right;
+            border-bottom: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="invoice-container">
+
+        <!-- Header Section -->
+        <header class="invoice-header">
+            <div class="header-left">
+                <h1>Invoice #<input type="text" id="invoiceNumber" placeholder="(add invoice number)"></h1>
+            </div>
+            <div class="header-right">
+                <h1 class="date-title">Add date</h1>
+                <input type="date" id="invoiceDate" class="date-input">
+            </div>
+        </header>
+
+        <!-- Address Section -->
+        <section class="address-section">
+            <div class="address-block to-block">
+                <div class="block-title">To</div>
+                <input type="text" id="clientName" placeholder="Client Name">
+                <input type="text" id="clientStreet" placeholder="12 Example Avenue">
+                <input type="text" id="clientCity" placeholder="City">
+                <input type="text" id="clientPostCode" placeholder="AB1 2CD">
+            </div>
+
+            <div class="address-block from-block">
+                <div class="block-title">From</div>
+                <input type="text" id="companyName" placeholder="(add company name/ individual name)">
+                <input type="text" id="companyCountry" placeholder="(add country/territory)">
+                <input type="text" id="companyCity" placeholder="(add city)">
+                <input type="text" id="companyStreet" placeholder="(add street addresss, including the post code)">
+                <input type="text" id="companyReg" placeholder="(add company registration number / individual entrepreneur sertificate)">
+                <input type="text" id="companyVAT" placeholder="(add VAT number if applicable)">
+            </div>
+        </section>
+
+        <!-- Items Table -->
+        <section class="items-section">
+            <div class="table-header">
+                <div class="col description">Description</div>
+                <div class="col quantity">Quantity</div>
+                <div class="col unit-price">Unit Price</div>
+                <div class="col amount">Amount</div>
+            </div>
+
+            <div id="itemRows">
+                <!-- Item rows will be added here by JavaScript -->
+                <div class="item-row template-row">
+                    <input type="text" class="item-description" placeholder="(add item)">
+                    <input type="number" class="item-quantity" value="1" min="1">
+                    <input type="number" class="item-unit-price" value="0.00" min="0" step="0.01">
+                    <div class="item-amount">€0.00</div>
+                    <button class="remove-item-btn" title="Remove Item">X</button>
+                </div>
+            </div>
+
+            <button id="addItemBtn" class="add-item-btn">+ Add Item</button>
+        </section>
+
+        <!-- Footer Section (Payment and Totals) -->
+        <section class="footer-section">
+            <div class="payment-details">
+                <div class="block-title">Payment Details</div>
+                <input type="text" placeholder="Bank name: (add bank name)">
+                <input type="text" placeholder="IBAN: (add IBAN)">
+                <input type="text" placeholder="SWIFT: (add SWIFT)">
+                <div class="payment-note">Please pay within 14 days</div>
+            </div>
+
+            <div class="totals-summary">
+                <div class="summary-row">
+                    <div class="label">Subtotal</div>
+                    <div class="value" id="subtotalValue">€0.00</div>
+                </div>
+                <div class="summary-row vat-row">
+                    <div class="label">
+                        VAT (<input type="number" id="vatRate" value="0" min="0" max="100" step="0.1">% rate)
+                    </div>
+                    <div class="value" id="vatValue">€0.00</div>
+                </div>
+                <div class="summary-row discount-row">
+                    <div class="label">Discount</div>
+                    <input type="number" id="discountValue" value="0.00" min="0" step="0.01" class="discount-input">
+                </div>
+                <div class="summary-row total-row">
+                    <div class="label">Total</div>
+                    <div class="value" id="totalValue">€0.00</div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const itemRowsContainer = document.getElementById('itemRows');
+            const addItemBtn = document.getElementById('addItemBtn');
+            const subtotalValue = document.getElementById('subtotalValue');
+            const vatRateInput = document.getElementById('vatRate');
+            const vatValueElement = document.getElementById('vatValue');
+            const discountValueInput = document.getElementById('discountValue');
+            const totalValueElement = document.getElementById('totalValue');
+
+            // --- Core Functions ---
+
+            /**
+             * Clones the template row and initializes event listeners.
+             */
+            function createNewItemRow() {
+                const templateRow = document.querySelector('.item-row.template-row');
+                // Clone the row, making sure to deep clone all children
+                const newRow = templateRow.cloneNode(true);
+
+                // Remove the template class and reset values
+                newRow.classList.remove('template-row');
+                newRow.querySelector('.item-description').value = '';
+                newRow.querySelector('.item-quantity').value = 1;
+                newRow.querySelector('.item-unit-price').value = 0.00;
+                newRow.querySelector('.item-amount').textContent = '€0.00';
+
+                // Attach listeners to the new row's inputs
+                attachRowListeners(newRow);
+
+                // Attach listener to the remove button
+                newRow.querySelector('.remove-item-btn').addEventListener('click', () => {
+                    newRow.remove();
+                    updateTotals();
+                });
+
+                itemRowsContainer.appendChild(newRow);
+                updateTotals();
+            }
+
+            /**
+             * Attaches change/input listeners to quantity and price fields.
+             * @param {HTMLElement} row - The item row element.
+             */
+            function attachRowListeners(row) {
+                const quantityInput = row.querySelector('.item-quantity');
+                const priceInput = row.querySelector('.item-unit-price');
+
+                const updateLineItem = () => {
+                    const qty = parseFloat(quantityInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    const amount = qty * price;
+                    
+                    row.querySelector('.item-amount').textContent = formatCurrency(amount);
+                    updateTotals();
+                };
+
+                quantityInput.addEventListener('input', updateLineItem);
+                priceInput.addEventListener('input', updateLineItem);
+            }
+
+            /**
+             * Calculates and updates the Subtotal, VAT, Discount, and Grand Total.
+             */
+            function updateTotals() {
+                let subtotal = 0;
+                // Select all item rows that are NOT the template
+                const allRows = itemRowsContainer.querySelectorAll('.item-row:not(.template-row)');
+
+                // 1. Calculate Subtotal
+                allRows.forEach(row => {
+                    const qty = parseFloat(row.querySelector('.item-quantity').value) || 0;
+                    const price = parseFloat(row.querySelector('.item-unit-price').value) || 0;
+                    subtotal += qty * price;
+                });
+
+                // 2. Calculate VAT
+                const vatRate = parseFloat(vatRateInput.value) / 100 || 0;
+                const vatAmount = subtotal * vatRate;
+
+                // 3. Apply Discount
+                const discount = parseFloat(discountValueInput.value) || 0;
+
+                // 4. Calculate Total
+                const total = subtotal + vatAmount - discount;
+
+                // 5. Update DOM
+                subtotalValue.textContent = formatCurrency(subtotal);
+                vatValueElement.textContent = formatCurrency(vatAmount);
+                totalValueElement.textContent = formatCurrency(total);
+            }
+
+            /**
+             * Helper function to format numbers as currency.
+             * @param {number} amount - The numeric amount.
+             * @returns {string} Formatted currency string.
+             */
+            function formatCurrency(amount) {
+                // Use Intl.NumberFormat for robust currency formatting (Euro assumed)
+                return new Intl.NumberFormat('en-US', {
+                    style: 'currency',
+                    currency: 'EUR', 
+                    minimumFractionDigits: 2
+                }).format(amount);
+            }
+
+            // --- Initialization and Event Listeners ---
+
+            // Initial setup: The first row in the HTML is the template. We need to make it functional.
+            const initialRow = document.querySelector('.item-row.template-row');
+            initialRow.classList.remove('template-row');
+            attachRowListeners(initialRow);
+
+            // Add Item Button Listener
+            addItemBtn.addEventListener('click', createNewItemRow);
+
+            // Global listeners for VAT and Discount changes
+            vatRateInput.addEventListener('input', updateTotals);
+            discountValueInput.addEventListener('input', updateTotals);
+
+            // Set initial date to today
+            document.getElementById('invoiceDate').valueAsDate = new Date();
+
+            // Initial calculation
+            updateTotals();
+        });
+    </script>
+</body>
+</html>
